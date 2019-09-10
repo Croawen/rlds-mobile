@@ -1,23 +1,20 @@
 import React from "react";
-import { View, Picker } from "react-native";
-import { Text, TextInput, Button } from "react-native-paper";
-import generateId from "../../../../common/helpers/generateId";
-import NumericInput from "../../../../common/components/NumericInput";
+import { View } from "react-native";
+import Toast from "react-native-easy-toast";
+import { Button, TextInput } from "react-native-paper";
 import { createGroup } from "../../../../common/api/groups.api";
-import Toast, { DURATION } from "react-native-easy-toast";
 
 class NewGroupScreen extends React.Component {
   state = {
     name: "",
-    info: "",
-    ordinal: ""
+    description: ""
   };
 
   async componentDidMount() {}
 
   render() {
     return (
-      <View style={{ flex: 1, marginTop: -64 }}>
+      <View style={{ flex: 1 }}>
         <View style={{ padding: 25 }}>
           <TextInput
             mode="outlined"
@@ -30,18 +27,10 @@ class NewGroupScreen extends React.Component {
         <View style={{ padding: 25, paddingTop: 0 }}>
           <TextInput
             mode="outlined"
-            label="Info"
-            value={this.state.info}
+            label="Description"
+            value={this.state.description}
             multiline={true}
-            onChangeText={text => this.setState({ info: text })}
-          />
-        </View>
-
-        <View style={{ padding: 25, paddingTop: 0 }}>
-          <NumericInput
-            label="Ordinal"
-            value={this.state.ordinal}
-            onChange={val => this.setState({ ordinal: val })}
+            onChangeText={text => this.setState({ description: text })}
           />
         </View>
 
@@ -70,7 +59,17 @@ class NewGroupScreen extends React.Component {
           this.props.navigation.pop();
         }, 1000);
       } catch (e) {
-        this.refs.toast.show("Invalid data provided.");
+        switch (e.statusCode) {
+          case 400:
+            this.refs.toast.show("Invalid data provided.");
+            break;
+          case 460:
+            this.refs.toast.show("Group with this name already exists.");
+            break;
+          default:
+            this.refs.toast.show("Unexpected server error.");
+            break;
+        }
         this.setState({ loading: false });
       }
     }, 1000);

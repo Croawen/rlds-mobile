@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { ActivityIndicator, AsyncStorage, StatusBar, View } from "react-native";
+import { ActivityIndicator, StatusBar, View } from "react-native";
 import { main } from "../../styles/container";
 import { getCurrentUser } from "../../common/storage";
 

@@ -1,7 +1,11 @@
 import React from "react";
-import { View, ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Button, Card, List } from "react-native-paper";
-import { getAccounts } from "../../../../common/api/accounts.api";
+import {
+  deleteAccount,
+  getAccounts
+} from "../../../../common/api/accounts.api";
+import LoadingIndicator from "../../../../common/components/LoadingIndicator";
 import generateId from "../../../../common/helpers/generateId";
 
 class AccountsListScreen extends React.Component {
@@ -20,51 +24,72 @@ class AccountsListScreen extends React.Component {
   }
 
   async getAccounts() {
-    const res = await getAccounts();
-    this.setState({
-      isVisible: true,
-      items: res.Items,
-      pageNumber: res.PageNumber,
-      pageSize: res.PageSize,
-      pageCount: res.PageCount
-    });
+    try {
+      const res = await getAccounts();
+      this.setState({
+        isVisible: true,
+        items: res.items,
+        pageNumber: res.pageNumber,
+        pageSize: res.pageSize,
+        pageCount: res.pageCount
+      });
+    } catch (e) {}
   }
 
   render() {
-    return this.state.isVisible ? (
-      <ScrollView pagingEnabled={true}>
-        <View style={{ flex: 1 }}>
-          <Card style={{ flex: 1 }}>
-            {this.state.items &&
-              this.state.items.map(item => {
+    if (!this.state.isVisible) return null;
+    return (
+      <View style={{ flex: 1 }}>
+        {this.state.items && (
+          <ScrollView pagingEnabled={true}>
+            <Card style={{ flex: 1 }}>
+              {this.state.items.map(item => {
                 return (
-                  <List.Item
+                  <List.Accordion
                     key={generateId()}
-                    title={item.Name}
-                    description={item.Currency.Name}
-                    onPress={() => this.onItemClick(item.AccountId)}
-                    left={props => <List.Icon {...props} icon="folder" />}
-                  />
+                    title={item.name}
+                    description={`${item.balance} ${item.currency}`}
+                    left={props => <List.Icon {...props} icon="assignment" />}
+                  >
+                    <List.Item
+                      key={generateId()}
+                      title="Details"
+                      onPress={() => {
+                        this.onEditClick(item.id);
+                      }}
+                    />
+                    <List.Item
+                      key={generateId()}
+                      title="Delete"
+                      onPress={() => {
+                        deleteAccount(item.id);
+                        this.getAccounts();
+                      }}
+                    />
+                  </List.Accordion>
                 );
               })}
-          </Card>
+            </Card>
+          </ScrollView>
+        )}
 
-          <Button
-            mode="contained"
-            loading={false}
-            onPress={() => {
-              this.setState({ isVisible: false });
-              this.props.navigation.navigate("NewAccount");
-            }}
-          >
-            Create an account
-          </Button>
-        </View>
-      </ScrollView>
-    ) : null;
+        {!this.state.isVisible && <LoadingIndicator />}
+
+        <Button
+          mode="contained"
+          loading={false}
+          onPress={() => {
+            this.setState({ isVisible: false });
+            this.props.navigation.navigate("NewAccount");
+          }}
+        >
+          Create an account
+        </Button>
+      </View>
+    );
   }
 
-  onItemClick = async accountId => {
+  onEditClick = async accountId => {
     this.setState({ isVisible: false });
     this.props.navigation.navigate("AccountDetails", { id: accountId });
   };

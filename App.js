@@ -1,14 +1,15 @@
 import React from "react";
-import { createSwitchNavigator, createAppContainer } from "react-navigation";
+import { YellowBox } from "react-native";
+import { Provider as PaperProvider } from "react-native-paper";
+import { createAppContainer, createSwitchNavigator } from "react-navigation";
 import { Provider } from "react-redux";
-import store from "./src/redux/store";
 import AuthLoadingScreen from "./src/modules/auth/AuthLoadingScreen";
 import LoginScreen from "./src/modules/auth/LoginScreen";
 import RegisterScreen from "./src/modules/auth/RegisterScreen";
-import { Provider as PaperProvider } from "react-native-paper";
 import DrawerNavigation from "./src/modules/main/DrawerNavigation";
+import store from "./src/redux/store";
 
-const AuthSwitch = createSwitchNavigator({
+export const AuthSwitch = createSwitchNavigator({
   Login: { screen: LoginScreen, path: "login" },
   Register: { screen: RegisterScreen, path: "register" }
 });
@@ -20,6 +21,8 @@ const AppContainer = createAppContainer(
     App: DrawerNavigation
   })
 );
+
+YellowBox.ignoreWarnings(["Require cycle:"]);
 
 export default function App() {
   return (

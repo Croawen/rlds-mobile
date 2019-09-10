@@ -13,7 +13,6 @@ class RegisterScreen extends React.Component {
   state = {
     login: "",
     password: "",
-    email: "",
     loading: false
   };
 
@@ -33,15 +32,6 @@ class RegisterScreen extends React.Component {
         <View style={{ padding: 25, paddingTop: 0 }}>
           <TextInput
             mode="outlined"
-            label="Email"
-            value={this.state.register}
-            onChangeText={text => this.setState({ email: text })}
-          />
-        </View>
-
-        <View style={{ padding: 25, paddingTop: 0 }}>
-          <TextInput
-            mode="outlined"
             label="Password"
             secureTextEntry={true}
             value={this.state.password}
@@ -50,7 +40,6 @@ class RegisterScreen extends React.Component {
         </View>
 
         <Button
-          icon="add-a-photo"
           mode="contained"
           loading={this.state.loading}
           onPress={this.onRegisterClick}
@@ -77,16 +66,13 @@ class RegisterScreen extends React.Component {
     this.setState({ loading: true });
     setTimeout(async () => {
       try {
-        const res = await register({
+        await register({
           login: this.state.login,
-          password: this.state.password,
-          email: this.state.email
+          password: this.state.password
         });
 
         this.setState({ loading: false });
-        if (res) {
-          this.props.navigation.navigate("Login");
-        }
+        this.props.navigation.navigate("Login");
       } catch (e) {
         this.setState({ loading: false });
         this.refs.toast.show("Invalid register attempt.");

@@ -1,22 +1,29 @@
 import { api, apiUrl } from "./api";
+import store from "../../redux/store";
 
 export const logInUser = async ({ login, password }) =>
   await api
     .noAuth()
-    .url(`${apiUrl}/v1/users/authenticate`)
+    .url(`${apiUrl}/auth/login`)
     .post({ login, password })
     .json();
 
-export const register = async ({ login, password, email }) =>
+export const refreshToken = async ({ token }) =>
   await api
     .noAuth()
-    .url(`${apiUrl}/v1/users`)
+    .url(`${apiUrl}/auth/refresh`)
+    .catcher(460, (err, req) => {
+      store.dispatch.currentUser.logOut();
+    })
+    .post({ token })
+    .json();
+
+export const register = async ({ login, password }) =>
+  await api
+    .noAuth()
+    .url(`${apiUrl}/users`)
     .post({
       login,
-      password,
-      email,
-      firstName: "",
-      lastName: "",
-      avatarPath: ""
+      password
     })
-    .json();
+    .res();

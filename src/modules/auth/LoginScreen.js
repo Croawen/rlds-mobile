@@ -38,7 +38,6 @@ class LoginScreen extends React.Component {
         </View>
 
         <Button
-          icon="add-a-photo"
           mode="contained"
           loading={this.state.loading}
           onPress={this.onLoginClick}

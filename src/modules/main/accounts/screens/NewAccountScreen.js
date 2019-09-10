@@ -1,108 +1,118 @@
 import React from "react";
-import { View, Picker } from "react-native";
-import { Text, TextInput, Button } from "react-native-paper";
-import { getCurrencies } from "../../../../common/api/currencies.api";
-import { getGroups } from "../../../../common/api/groups.api";
-import generateId from "../../../../common/helpers/generateId";
-import NumericInput from "../../../../common/components/NumericInput";
+import { Picker, ScrollView, View } from "react-native";
+import Toast from "react-native-easy-toast";
+import { Button, Text, TextInput } from "react-native-paper";
 import { createAccount } from "../../../../common/api/accounts.api";
-import Toast, { DURATION } from "react-native-easy-toast";
+import { getGroups } from "../../../../common/api/groups.api";
+import NumericInput from "../../../../common/components/NumericInput";
+import generateId from "../../../../common/helpers/generateId";
+
+const currencies = { PLN: "PLN", USD: "USD", GBP: "GBP", EUR: "EUR" };
 
 class NewAccountScreen extends React.Component {
   state = {
-    currencies: [],
     groups: [],
     groupId: "",
-    currencyId: "",
+    currency: "",
+    description: "",
     name: "",
-    startAmount: 0
+    balance: 0
   };
 
   async componentDidMount() {
-    const currencies = await getCurrencies();
     const groups = await getGroups();
-    if (currencies && groups) {
+    if (groups) {
       this.setState({
-        currencies: currencies.Items,
-        groups: groups.Items,
-        currencyId: currencies.Items[0].CurrencyId,
-        groupId: groups.Items[0].GroupId
+        groups: groups.items,
+        currency: currencies.USD,
+        groupId: groups.items[0].id
       });
     }
   }
 
   render() {
     return (
-      <View style={{ flex: 1, marginTop: -64 }}>
-        <View style={{ padding: 25 }}>
-          <Text>Currency</Text>
-          <Picker
-            selectedValue={this.state.currencyId}
-            onValueChange={val => {
-              this.setState({
-                currencyId: val
-              });
-            }}
-            children={this.state.currencies.map(item => {
-              return (
-                <Picker.Item
-                  key={generateId()}
-                  label={item.Name}
-                  value={item.CurrencyId}
-                />
-              );
-            })}
-          />
+      <ScrollView>
+        <View style={{ flex: 1 }}>
+          <View style={{ paddingHorizontal: 25 }}>
+            <Text>Currency</Text>
+            <Picker
+              selectedValue={this.state.currency}
+              onValueChange={val => {
+                this.setState({
+                  currency: val
+                });
+              }}
+              children={Object.keys(currencies).map(item => {
+                return (
+                  <Picker.Item
+                    key={generateId()}
+                    label={item}
+                    value={currencies[item]}
+                  />
+                );
+              })}
+            />
+          </View>
+
+          <View style={{ paddingHorizontal: 25 }}>
+            <Text>Group</Text>
+            <Picker
+              selectedValue={this.state.groupId}
+              onValueChange={val => {
+                this.setState({
+                  groupId: val
+                });
+              }}
+              children={this.state.groups.map(item => {
+                return (
+                  <Picker.Item
+                    key={generateId()}
+                    label={item.name}
+                    value={item.id}
+                  />
+                );
+              })}
+            />
+          </View>
+
+          <View style={{ padding: 25, paddingTop: 0 }}>
+            <TextInput
+              mode="outlined"
+              label="Name"
+              value={this.state.name}
+              onChangeText={text => this.setState({ name: text })}
+            />
+          </View>
+
+          <View style={{ padding: 25, paddingTop: 0 }}>
+            <TextInput
+              mode="outlined"
+              label="Description"
+              value={this.state.description}
+              onChangeText={text => this.setState({ description: text })}
+            />
+          </View>
+
+          <View style={{ padding: 25, paddingTop: 0 }}>
+            <NumericInput
+              label="Balance"
+              value={this.state.balance}
+              onChange={val => this.setState({ balance: val })}
+            />
+          </View>
+
+          <Button
+            mode="contained"
+            loading={this.state.loading}
+            onPress={this.onSubmitClick}
+          >
+            Submit
+          </Button>
+
+          <Toast ref="toast" />
         </View>
-
-        <View style={{ padding: 25 }}>
-          <Text>Group</Text>
-          <Picker
-            selectedValue={this.state.groupId}
-            onValueChange={val => {
-              this.setState({
-                groupId: val
-              });
-            }}
-            children={this.state.groups.map(item => {
-              return (
-                <Picker.Item
-                  key={generateId()}
-                  label={item.Name}
-                  value={item.GroupId}
-                />
-              );
-            })}
-          />
-        </View>
-
-        <View style={{ padding: 25 }}>
-          <TextInput
-            mode="outlined"
-            label="Name"
-            value={this.state.name}
-            onChangeText={text => this.setState({ name: text })}
-          />
-        </View>
-
-        <View style={{ padding: 25, paddingTop: 0 }}>
-          <NumericInput
-            label="Start amount"
-            value={this.state.startAmount}
-            onChange={val => this.setState({ startAmount: val })}
-          />
-        </View>
-
-        <Button
-          mode="contained"
-          loading={this.state.loading}
-          onPress={this.onSubmitClick}
-        >
-          Submit
-        </Button>
-
-        <Toast ref="toast" />
-      </View>
+      </ScrollView>
     );
   }
 
@@ -118,7 +128,17 @@ class NewAccountScreen extends React.Component {
           this.props.navigation.pop();
         }, 1000);
       } catch (e) {
-        this.refs.toast.show("Invalid data provided.");
+        switch (e.statusCode) {
+          case 400:
+            this.refs.toast.show("Invalid data provided.");
+            break;
+          case 460:
+            this.refs.toast.show("Account with this name already exists.");
+            break;
+          default:
+            this.refs.toast.show("Unexpected server error.");
+            break;
+        }
         this.setState({ loading: false });
       }
     }, 1000);

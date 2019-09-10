@@ -1,8 +1,22 @@
 import wretch from "wretch";
-import applyTokenAction from "./helpers/apply-token-action";
 import store from "../../redux/store";
+import applyTokenAction from "./helpers/apply-token-action";
+import refreshTokenAction from "./helpers/refresh-token-action";
 
-export const apiUrl = "http://teampusheenapp.hostingasp.pl/api";
+export const apiUrl = "http://rlds-api.herokuapp.com";
+
+export const unauthorizedCatcher = async (err, originalRequest) => {
+  const newAuthData = await refreshTokenAction();
+
+  if (!newAuthData) {
+    store.dispatch.currentUser.logOut();
+    throw err;
+  }
+
+  return originalRequest
+    .auth(newAuthData.token)
+    .catcher(401, (err, req) => store.dispatch.currentUser.logOut());
+};
 
 export const api = {
   noAuth: () =>
@@ -13,10 +27,7 @@ export const api = {
   withAuth: async () =>
     wretch()
       .content("application/json")
-      .auth(await applyTokenAction())
-      .catcher(440, () => {
-        store.dispatch.currentUser.logOut();
-      }),
+      .auth(await applyTokenAction()),
 
   noContentAuth: () => wretch().auth(applyTokenAction())
 };

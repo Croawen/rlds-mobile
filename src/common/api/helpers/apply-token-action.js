@@ -5,7 +5,7 @@ const applyTokenAction = async () => {
 
   if (!currentUser) return "";
 
-  return "Bearer " + currentUser.Token;
+  return "Bearer " + currentUser.accessToken.token;
 };
 
 export default applyTokenAction;

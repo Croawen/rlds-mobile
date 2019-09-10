@@ -28,16 +28,16 @@ export const currentUserModel = {
     async logIn({ login, password }) {
       const res = await logInUser({ login, password });
       if (res) {
-        setCurrentUser(res);
+        await setCurrentUser(res);
         this.setCurrentUserAuthData(res);
       }
 
       return res;
     },
 
-    logOut() {
-      clearCurrentUser();
+    async logOut() {
       this.clearUser();
+      await clearCurrentUser();
     }
   })
 };

@@ -1,7 +1,8 @@
 import React from "react";
 import { View } from "react-native";
-import { getGroup } from "../../../../common/api/groups.api";
 import { TextInput } from "react-native-paper";
+import { getGroup } from "../../../../common/api/groups.api";
+import LoadingIndicator from "../../../../common/components/LoadingIndicator";
 
 class GroupDetailsScreen extends React.Component {
   state = {
@@ -20,46 +21,45 @@ class GroupDetailsScreen extends React.Component {
       this.setState({
         group
       });
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
   }
 
-  render() {
+  renderForm() {
     const group = this.state.group;
     if (!group) {
       return null;
     }
 
     return (
-      <View style={{ flex: 1, marginTop: -64 }}>
+      <View style={{ flex: 1 }}>
         <View style={{ padding: 25 }}>
           <TextInput
             mode="outlined"
             label="Name"
             editable={false}
-            value={group.Name}
+            disabled={true}
+            value={group.name}
           />
         </View>
 
         <View style={{ padding: 25, paddingTop: 0 }}>
           <TextInput
             mode="outlined"
-            label="Info"
+            label="Description"
             editable={false}
-            value={group.Info}
+            disabled={true}
+            value={group.description}
             multiline={true}
-          />
-        </View>
-
-        <View style={{ padding: 25, paddingTop: 0 }}>
-          <TextInput
-            mode="outlined"
-            label="Ordinal"
-            editable={false}
-            value={group.Ordinal ? group.Ordinal.toString() : "0"}
           />
         </View>
       </View>
     );
+  }
+
+  render() {
+    return this.state.group ? this.renderForm() : <LoadingIndicator />;
   }
 }
 

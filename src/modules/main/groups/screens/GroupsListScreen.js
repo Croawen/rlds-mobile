@@ -1,8 +1,9 @@
 import React from "react";
-import { View, ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Button, Card, List } from "react-native-paper";
-import generateId from "../../../../common/helpers/generateId";
 import { getGroups } from "../../../../common/api/groups.api";
+import LoadingIndicator from "../../../../common/components/LoadingIndicator";
+import generateId from "../../../../common/helpers/generateId";
 
 class GroupsListScreen extends React.Component {
   state = {
@@ -20,53 +21,65 @@ class GroupsListScreen extends React.Component {
   }
 
   async getGroups() {
-    const res = await getGroups();
-    this.setState({
-      isVisible: true,
-      items: res.Items,
-      pageNumber: res.PageNumber,
-      pageSize: res.PageSize,
-      pageCount: res.PageCount
-    });
+    try {
+      const res = await getGroups();
+      this.setState({
+        isVisible: true,
+        items: res.items,
+        pageNumber: res.pager.pageNumber,
+        pageSize: res.pager.pageSize,
+        pageCount: res.pager.pageCount
+      });
+    } catch (e) {}
   }
 
   render() {
-    return this.state.isVisible ? (
-      <ScrollView pagingEnabled={true}>
-        <View style={{ flex: 1 }}>
-          <Card style={{ flex: 1 }}>
-            {this.state.items &&
-              this.state.items.map(item => {
+    if (!this.state.isVisible) {
+      return null;
+    }
+    return (
+      <View style={{ flex: 1 }}>
+        {this.state.items && (
+          <ScrollView pagingEnabled={true}>
+            <Card style={{ flex: 1 }}>
+              {this.state.items.map(item => {
                 return (
                   <List.Item
                     key={generateId()}
-                    title={item.Name}
-                    description={item.Info}
-                    onPress={() => this.onItemClick(item.GroupId)}
-                    left={props => <List.Icon {...props} icon="folder" />}
+                    title={item.name}
+                    description={item.description}
+                    onPress={() => this.onItemClick(item)}
+                    left={props => (
+                      <List.Icon {...props} icon="accessibility" />
+                    )}
                   />
                 );
               })}
-          </Card>
+            </Card>
+          </ScrollView>
+        )}
 
-          <Button
-            mode="contained"
-            loading={false}
-            onPress={() => {
-              this.setState({ isVisible: false });
-              this.props.navigation.navigate("NewGroup");
-            }}
-          >
-            Create a group
-          </Button>
-        </View>
-      </ScrollView>
-    ) : null;
+        {!this.state.isVisible && <LoadingIndicator />}
+
+        <Button
+          mode="contained"
+          loading={false}
+          onPress={() => {
+            this.setState({ isVisible: false });
+            this.props.navigation.navigate("NewGroup");
+          }}
+        >
+          Create a group
+        </Button>
+      </View>
+    );
   }
 
-  onItemClick = async groupId => {
-    this.setState({ isVisible: false });
-    this.props.navigation.navigate("GroupDetails", { id: groupId });
+  onItemClick = async group => {
+    if (group.editable) {
+      this.setState({ isVisible: false });
+      this.props.navigation.navigate("GroupDetails", { id: group.id });
+    }
   };
 }
 
